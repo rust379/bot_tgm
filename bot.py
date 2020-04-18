@@ -3,7 +3,6 @@ import random
 import botToken
 import cfCommands as cf
 import database as db
- 
 from telebot import types
 
 bot = telebot.TeleBot(botToken.token)
