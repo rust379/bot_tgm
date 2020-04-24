@@ -1,64 +1,146 @@
-import sqlite3 as sql
+"""
+Interaction with sqlite database
+"""
+import sqlite3
 from sqlite3 import Error
 
-def register_database():
 
+def register_database():
+    """Database creation"""
     try:
-        con = sql.connect('test_database.db')
-        return con
+        return sqlite3.connect('test_database.db')
     except:
-        print(Error)
+        return Error
+
 
 def init_cursor():
-
+    """
+    Initialization of the cursor
+    :return cursor:
+    """
     try:
-        cursor = con.cursor()
-        return cursor
+        cursor = CON.CURSOR()
+        recursor
     except:
         print(Error)
 
-    
-def create_table():
 
-    cursor.execute("""
-                   create table if not exists users (user_name, tgm_name, cf_handle)
-                   """)
-    con.commit()
-
-def insert_into_users(user_data):
-
-    user_created = is_in_table(user_data[0][1])
-    if (user_created):
-        return
-    cursor.executemany("""INSERT INTO users VALUES(?, ?, ?)""", user_data)
-    con.commit()
-
-def user_data_struct(user_name, tgm_name, cf_handle):
-
-    return [(user_name, tgm_name, cf_handle)]
-
-def user_data_by_tgm_name(tgm_name):
-
-    sql = "SELECT * FROM users WHERE tgm_name = ?"
-    cursor.execute(sql, [(tgm_name)])
-    return cursor.fetchall()
-
-def add_user(user_name, tgm_name, cf_handle = ""):
-
-    user = user_data_struct(user_name, tgm_name, cf_handle)
-    insert_into_users(user)
-
-def is_in_table(tgm_name):
-
-    return bool(len(user_data_by_tgm_name(tgm_name))) 
-
-def update_cf_handle(tgm_name, new_handle):
-
-    cursor.execute('UPDATE users SET cf_handle = ? where tgm_name = ?', [(new_handle), (tgm_name)])
-    con.commit()
-    
-con = register_database()
-cursor = init_cursor()
-create_table()
+def create_table(table_name, attributes):
+    """
+    Create table
+    :param string table_name: table name
+    :param list[string] attributes: table attributes
+    """
+    try:
+        CURSOR.execute(
+            "CREATE table if not if not exists {} ({})".format(table_name, list(attributes)))
+        CON.commit()
+    except:
+        print(Error)
 
 
+def delete_table(table_name):
+    """Delete table"""
+    try:
+        CURSOR.execute("DROP table if exists {}".format(table_name))
+        CON.commit()
+    except:
+        print(Error)
+
+
+def get_tables():
+    """
+    :return list: all tables names from database
+    """
+    try:
+        CURSOR.execute('SELECT name from sqlite_master where type= "table"')
+        return CURSOR.fetchall()
+    except:
+        print(Error)
+        return list()
+
+
+def insert_into_table(table_name, entry_data):
+    """
+    Write to the database
+    :param string table_name: table name
+    :param list entry_data: entry data
+    """
+    try:
+        q_marks = '?,' * (len(entry_data) - 1) + '?'
+        query = "INSERT INTO {} VALUES({})".format(table_name, q_marks)
+        CURSOR.executemany(query, entry_data)
+        CON.commit()
+    except:
+        print(Error)
+
+
+def remove_from_table(table_name, data):
+    """
+    Remove data from database
+    :param string table_name: table name
+    :param dictionary data: key - table attribute, val - value
+    """
+    cond = ""
+    for key, val in data.items():
+        cond += "{} = {},\n".format(key, val)
+
+    sql = "DELETE from {} WHERE {}".format(table_name, cond[:-2])
+
+    try:
+        CURSOR.execute(sql)
+        CON.commit()
+    except:
+        print(Error)
+
+
+def data_from_table(table_name, attributes, conditions):
+    """
+    Get a selection from the database
+    :param string table_name: table name
+    :param list, tuple attributes: table attributes
+    :param list, tuple conditions: conditions for selection
+    :return : list
+    """
+    att = ""
+    for attribute in attributes:
+        att += attribute + ',\n'
+
+    if len(att) != 0:
+        att = att[:-2]
+    else:
+        att = "*"
+
+    cond = ""
+    for condition in conditions:
+        cond += condition + ',\n'
+
+    if len(cond) != 0:
+        cond = "WHERE " + cond[:-2]
+
+    try:
+        sql = "SELECT {} FROM {} {}".format(att, table_name, cond)
+        CURSOR.execute(sql)
+        return CURSOR.fetchall()
+    except:
+        print(Error)
+        return list()
+
+
+def customized_query(sql, all_entries):
+    """
+    Make customized query
+    :param string sql: your query text
+    :param bool all_entries: if true - return all entries, else - return one entrie
+    :return: query result
+    """
+    try:
+        CURSOR.execute(sql)
+        return CURSOR.fetchall() if all_entries else CURSOR.fetchone()
+    except:
+        print(Error)
+        return list()
+
+
+CON = register_database()
+CURSOR = init_cursor()
