@@ -8,7 +8,8 @@ from sqlite3 import Error
 def register_database():
     """Database creation"""
     try:
-        return sqlite3.connect('test_database.db')
+        result = sqlite3.connect('test_database.db')
+        return result
     except:
         return Error
 
@@ -16,13 +17,14 @@ def register_database():
 def init_cursor():
     """
     Initialization of the cursor
+    :rtype: object
     :return cursor:
     """
     try:
-        cursor = CON.CURSOR()
-        recursor
+        result = CON.cursor()
+        return result
     except:
-        print(Error)
+        return Error
 
 
 def create_table(table_name, attributes):
@@ -33,7 +35,7 @@ def create_table(table_name, attributes):
     """
     try:
         CURSOR.execute(
-            "CREATE table if not if not exists {} ({})".format(table_name, list(attributes)))
+            "CREATE table if not exists {} {}".format(table_name, tuple(attributes)))
         CON.commit()
     except:
         print(Error)
@@ -69,7 +71,7 @@ def insert_into_table(table_name, entry_data):
     try:
         q_marks = '?,' * (len(entry_data) - 1) + '?'
         query = "INSERT INTO {} VALUES({})".format(table_name, q_marks)
-        CURSOR.executemany(query, entry_data)
+        CURSOR.execute(query, entry_data)
         CON.commit()
     except:
         print(Error)
@@ -86,6 +88,7 @@ def remove_from_table(table_name, data):
         cond += "{} = {},\n".format(key, val)
 
     sql = "DELETE from {} WHERE {}".format(table_name, cond[:-2])
+    print(sql)
 
     try:
         CURSOR.execute(sql)
@@ -98,8 +101,8 @@ def data_from_table(table_name, attributes, conditions):
     """
     Get a selection from the database
     :param string table_name: table name
-    :param list, tuple attributes: table attributes
-    :param list, tuple conditions: conditions for selection
+    :param list, list attributes: table attributes
+    :param list, list conditions: conditions for selection
     :return : list
     """
     att = ""
@@ -120,6 +123,7 @@ def data_from_table(table_name, attributes, conditions):
 
     try:
         sql = "SELECT {} FROM {} {}".format(att, table_name, cond)
+        print(sql)
         CURSOR.execute(sql)
         return CURSOR.fetchall()
     except:
