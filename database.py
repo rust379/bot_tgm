@@ -131,6 +131,8 @@ class Database():
             "order" : ("user_name")
         :return: list
         """
+        if extra_parameter is None:
+            extra_parameter = get_request_struct()
 
         block_attribute = self.__query_block(extra_parameter["attributes"], ",")
         block_condition = self.__query_block(extra_parameter["conditions"], " AND")
