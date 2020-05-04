@@ -39,7 +39,10 @@ BOT = BotRun(botToken.token)
 
 @BOT.message_handler(commands=["start"])
 def welcome(message):
-    """Send welcome text to chat id, which specified in message param"""
+    """Send welcome text to chat id, which specified in message param
+    Create record in users table
+    """
+
     message_text = ("Добро пожаловать, {0.first_name}!\n"
                     "Я - <b>{1.first_name}</b>, бот, "
                     "созданный чтобы быть подопытным кроликом.").format(
@@ -53,6 +56,7 @@ def welcome(message):
 @BOT.message_handler(commands=["help"])
 def commands_list(message):
     """Send list of commands to chat id, which specified in message param"""
+
     list_of_commands = ["/myRating"]
     commands_str = ""
     for command in list_of_commands:
@@ -65,6 +69,7 @@ def commands_list(message):
 @BOT.message_handler(commands=["registerCfHandle"])
 def register_cf_handle(message):
     """Change current action to registartion for chat id"""
+
     BOT.send_message(message.chat.id,
                      "Пожалуйста, скажите нам ваш логин на codeforces")
     BOT.current_event[str(message.chat.id)] = "CF_REGISTRATION"
@@ -73,10 +78,11 @@ def register_cf_handle(message):
 @BOT.message_handler(commands=["myRating"])
 def cur_user_rating(message):
     """Send info about current rating, if chat id was registered with cf_handle"""
+
     params = db.get_request_struct()
     params["attributes"].append("cf_handle")
     params["conditions"].append("chat_id = {}".format(message.chat.id))
-    cf_handle = BOT.database.data_from_table('users', params)
+    cf_handle = BOT.database.data_from_table("users", params)
     if cf_handle:
         message_text = cf.curUserRating(cf_handle[0][0])
         BOT.send_message(message.chat.id, message_text, parse_mode="html")
@@ -89,12 +95,13 @@ def text_message_handler(message):
     Possible values for event:
         "CF_REGISTRATION" - register user codeforces login in database
     If nothing event provided - ignore message"""
+
     if str(message.chat.id) not in BOT.current_event.keys():
         return
 
     if BOT.current_event[str(message.chat.id)] == "CF_REGISTRATION":
         BOT.database.update_record("users", [
             'tgm_name = "{}" AND chat_id = {}'.format(
-                message.from_user.username, message.chat.id)
-        ], 'cf_handle = "{}"'.format(message.text))
+                message.from_user.username, message.chat.id)],
+            'cf_handle = "{}"'.format(message.text))
         BOT.current_event.pop(message.chat.id, None)
