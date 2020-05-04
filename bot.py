@@ -30,8 +30,5 @@ def curUserRating(message):
     message_text = cf.curUserRating("rust");
     bot.send_message(message.chat.id, message_text, parse_mode = 'html')
 
-
 # RUN
 bot.polling(none_stop=True)
-
-
