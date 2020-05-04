@@ -31,6 +31,7 @@ class BotRun(telebot.TeleBot):
 
     def run(self):
         """Execute bot with none_stop=True"""
+
         self.polling(none_stop=True)
 
 
@@ -102,6 +103,6 @@ def text_message_handler(message):
     if BOT.current_event[str(message.chat.id)] == "CF_REGISTRATION":
         BOT.database.update_record("users", [
             'tgm_name = "{}" AND chat_id = {}'.format(
-                message.from_user.username, message.chat.id)],
-            'cf_handle = "{}"'.format(message.text))
+                message.from_user.username, message.chat.id)
+        ], 'cf_handle = "{}"'.format(message.text))
         BOT.current_event.pop(message.chat.id, None)
