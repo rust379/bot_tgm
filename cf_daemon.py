@@ -81,8 +81,8 @@ class CodeforcesDaemon:
             message_text: text for sending
         """
         params = db.get_request_struct()
+        params["attributes"] = ["chat_id"]
         for cf_handle in cf_handles:
-            params["attributes"] = ["chat_id"]
             params["conditions"] = ['cf_handle = "{}"'.format(cf_handle[0])]
             chat_id = self.database.data_from_table("users", params)[0]
             sender.send_message(chat_id[0], message_text)
