@@ -158,7 +158,6 @@ class CodeforcesDaemon:
                                                     {"contest_id": contest.id})
                     self.contests.remove(contest.id)
 
-
     def run(self):
         """Execute codeforces daemon:
             monitor codeforces and update information,
