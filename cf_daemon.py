@@ -54,7 +54,7 @@ def contest_from_database_record(record):
     contest.id = record[0]
     contest.name = record[1]
     contest.start_time = record[2]
-    contest.phase = cf.ContestPhase[record[3]]
+    contest.phase = cf.ContestPhase(record[3])
     return contest
 
 
@@ -169,7 +169,7 @@ class CodeforcesDaemon:
             try:
                 current_timestamp = int(datetime.datetime.now().timestamp())
 
-                if current_timestamp % 60 == 0:
+                if current_timestamp % 3600 == 0:
                     self.update_contests_info(current_timestamp)
                 if current_timestamp in self.timestamp2contests:
                     self.__create_contest_message(
