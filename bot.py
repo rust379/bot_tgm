@@ -76,6 +76,19 @@ def register_cf_handle(message):
     BOT.current_event[str(message.chat.id)] = "CF_REGISTRATION"
 
 
+@BOT.message_handler(commands=['notifyContest'])
+def notify_about_contest(message):
+    """Set contest_notify flag in true for user"""
+
+    params = db.get_request_struct()
+    params["attributes"].append("cf_handle")
+    params["conditions"].append("chat_id = {}".format(message.chat.id))
+    cf_handle = BOT.database.data_from_table("users", params)
+    if cf_handle and cf_handle[0][0] is not None:
+        BOT.database.insert_into_table("cf_notifications",
+                                       [cf_handle[0][0], "true"])
+
+
 @BOT.message_handler(commands=["myRating"])
 def cur_user_rating(message):
     """Send info about current rating, if chat id was registered with cf_handle"""
