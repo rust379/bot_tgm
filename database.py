@@ -66,6 +66,63 @@ class Database():
             print(err)
             return list()
 
+    def rename_table(self, table_name, new_name):
+        """
+        Rename table
+        :param string table_name: current table name
+        :param string new_name: new table name
+        """
+        query = "ALTER TABLE {} RENAME TO {}".format(table_name, new_name)
+
+        try:
+            self.cursor.execute(query)
+            self.connection.commit()
+        except Error as err:
+            print(err)
+
+    def add_column(self, table_name, column_name):
+        """
+        Add column to the table
+        :param string table_name: table name
+        :param string column_name: column name
+        """
+        query = "ALTER TABLE {} ADD {}".format(table_name, column_name)
+
+        try:
+            self.cursor.execute(query)
+            self.connection.commit()
+        except Error as err:
+            print(err)
+
+    def delete_column(self, table_name, column_name):
+        """
+        Add column to the table
+        :param string table_name: table name
+        :param string column_name: column name
+        """
+
+        table_info = self.table_info(table_name)
+        column_list = list()
+        for att in table_info:
+            column_list.append(att[1])
+        column_list.remove(column_name)
+        block_attribute = self.__query_block(column_list, ",")
+        query1 = "CREATE TABLE IF NOT EXISTS tmp_{0}({1})".format(table_name, block_attribute)
+        query2 = """INSERT INTO tmp_{0}({1})
+                    SELECT {1}
+                    FROM {0}
+                """.format(table_name, block_attribute)
+        query3 = "DROP TABLE {0}".format(table_name)
+        query4 = "ALTER TABLE tmp_{0} RENAME TO {0}".format(table_name)
+        try:
+            self.cursor.execute(query1)
+            self.cursor.execute(query2)
+            self.cursor.execute(query3)
+            self.cursor.execute(query4)
+            self.connection.commit()
+        except Error as err:
+            print(err)
+
     def insert_into_table(self, table_name, entry_data):
         """
         Write to the database
@@ -181,7 +238,7 @@ class Database():
     def __query_block(self, block_value, union: str = ""):
         """
         Creates a query block
-        :param list[string] condition: strings of type 'attribute'
+        :param list[string] block_value: strings of type 'attribute'
         :param string union: union in block
         :return string: block WHERE for query
         """
