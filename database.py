@@ -139,7 +139,8 @@ class Database:
 
     def delete_column(self, table_name, column_name):
         """
-        Add column to the table
+        Delete column from the table
+
         :param string table_name: table name
         :param string column_name: column name
         """
