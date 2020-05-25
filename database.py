@@ -1,5 +1,6 @@
 """
-Interaction with sqlite database
+Interaction with mysql database
+
 """
 
 from enum import Enum
