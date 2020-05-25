@@ -7,10 +7,12 @@ import database as db
 import sender
 import notifications as notif
 
-class NotificationDaemon():
+
+class NotificationDaemon:
     """
     Class for online monitoring users notifications
     """
+
     def __init__(self, database):
         """
         Initialize class
@@ -19,16 +21,17 @@ class NotificationDaemon():
         """
         self.database = database
         self.notifications = set()
-        self.last_update = time.ctime(0)
-        self.next_update = time.time()
+        self.last_update = 0
         self.update_notification_set()
-        self.database.create_table("user_notification_id", ["chat_id", "notif_id"])
+        self.database.create_table("user_notification_id",
+                                   ["`chat_id` INT UNSIGNED PRIMARY KEY NOT NULL",
+                                    "`notification_id` INT UNSIGNED NOT NULL"])
 
     def update_notification_set(self):
         """
         Loads notifications from the database and puts them in the class structure
         """
-        now = time.time()
+        now = int(time.time())
         self.last_update = now
         params = db.get_request_struct()
         params["conditions"] = ("is_active = True",
@@ -62,3 +65,4 @@ class NotificationDaemon():
                     self.database.update_record("user_notifications",
                                                 cur_notif.data_key(),
                                                 new_value)
+            time.sleep(60)

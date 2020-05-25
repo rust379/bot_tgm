@@ -48,10 +48,17 @@ def welcome(message):
                     "Я - <b>{1.first_name}</b>, бот, "
                     "созданный чтобы быть подопытным кроликом.").format(
                         message.from_user, BOT.get_me())
+    chat_id = message.chat.id
     BOT.send_message(message.chat.id, message_text, parse_mode="html")
-
+    params = db.get_request_struct()
+    params["conditions"] = ["chat_id = {}".format(chat_id)]
+    if BOT.database.data_from_table("users", params):
+        return
+    tgm_username = message.from_user.username
+    if tgm_username is None:
+        tgm_username = "NULL"
     BOT.database.insert_into_table(
-        "users", [message.from_user.username, None, message.chat.id])
+        "users", [chat_id, tgm_username, "NULL"])
 
 
 @BOT.message_handler(commands=["help"])
@@ -86,7 +93,7 @@ def notify_about_contest(message):
     cf_handle = BOT.database.data_from_table("users", params)
     if cf_handle and cf_handle[0][0] is not None:
         BOT.database.insert_into_table("cf_notifications",
-                                       [cf_handle[0][0], "true"])
+                                       [cf_handle[0][0], True])
 
 
 @BOT.message_handler(commands=["myRating"])

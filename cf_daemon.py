@@ -110,7 +110,10 @@ class CodeforcesDaemon:
         """
         self.database.create_table(
             "contests",
-            ["contest_id", "contest_name", "start_timestamp", "phase"])
+            ["`contest_id` INT PRIMARY KEY NOT NULL",
+             "`contest_name` VARCHAR(100) NULL",
+             "`start_timestamp` BIGINT NOT NULL",
+             "`phase` VARCHAR(100) NULL"])
         db_contests = self.database.data_from_table("contests",
                                                     db.get_request_struct())
         for db_contest in db_contests:
