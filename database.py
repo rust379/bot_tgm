@@ -29,7 +29,8 @@ class Database:
         :param string table_name: table name
         :param list[string] attributes: table attributes,
             consists of NAME TYPE PRIMARY KEY(optional) NOT NULL
-            ex. "`user_id` INT PRIMARY KEY NOT NULL", "user_name TEXT NOT NULL"
+            ex. "`user_id` INT PRIMARY KEY NOT NULL", "`user_name` TEXT NOT NULL"
+
         """
         try:
             block_attributes = query_block(attributes, ",")
