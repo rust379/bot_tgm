@@ -163,16 +163,19 @@ class Database:
             block_column = ""
             for column in columns:
                 block_column += column['Field'] + ", "
+
             entry_data_str = []
             for data in entry_data:
                 if isinstance(data, str):
                     entry_data_str.append("'{}'".format(data))
                 else:
                     entry_data_str.append("{}".format(data))
+
             block_column = block_column[:-2]
             data = query_block(entry_data_str, ",")
             query = "INSERT {}({}) VALUES({});".format(table_name, block_column, data)
             self.cursor.execute(query)
+
             self.connection.commit()
         except Error as err:
             print(err)
