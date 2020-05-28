@@ -164,7 +164,8 @@ class Database:
             columns = self.table_info(table_name)
             block_column = ""
             for column in columns:
-                block_column += column['Field'] + ", "
+                block_column += column["Field"] + ", "
+
 
             entry_data_str = []
             for data in entry_data:
