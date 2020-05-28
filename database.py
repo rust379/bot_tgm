@@ -1,5 +1,6 @@
 """
-Interaction with sqlite database
+Interaction with mysql database
+
 """
 
 from enum import Enum
@@ -29,7 +30,8 @@ class Database:
         :param string table_name: table name
         :param list[string] attributes: table attributes,
             consists of NAME TYPE PRIMARY KEY(optional) NOT NULL
-            ex. "`user_id` INT PRIMARY KEY NOT NULL", "user_name TEXT NOT NULL"
+            ex. "`user_id` INT PRIMARY KEY NOT NULL", "`user_name` TEXT NOT NULL"
+
         """
         try:
             block_attributes = query_block(attributes, ",")
@@ -138,7 +140,8 @@ class Database:
 
     def delete_column(self, table_name, column_name):
         """
-        Add column to the table
+        Delete column from the table
+
         :param string table_name: table name
         :param string column_name: column name
         """
@@ -162,6 +165,7 @@ class Database:
             block_column = ""
             for column in columns:
                 block_column += column['Field'] + ", "
+
             entry_data_str = []
             for data in entry_data:
                 if data is None:
@@ -170,10 +174,12 @@ class Database:
                     entry_data_str.append("'{}'".format(data))
                 else:
                     entry_data_str.append("{}".format(data))
+
             block_column = block_column[:-2]
             data = query_block(entry_data_str, ",")
             query = "INSERT {}({}) VALUES({});".format(table_name, block_column, data)
             self.cursor.execute(query)
+
             self.connection.commit()
         except Error as err:
             print("Database", err)
