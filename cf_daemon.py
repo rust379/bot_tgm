@@ -46,15 +46,15 @@ def contest_from_database_record(record):
     """Create codeforces.Contest class from database record.
 
     Args:
-        record: tuple; one database record
+        record: dict; one database record
     Returns:
         contest: codeforces.Contest
     """
     contest = cf.Contest()
-    contest.id = record[0]
-    contest.name = record[1]
-    contest.start_time = record[2]
-    contest.phase = cf.ContestPhase(record[3])
+    contest.id = record["contest_id"]
+    contest.name = record["contest_name"]
+    contest.start_time = record["start_timestamp"]
+    contest.phase = cf.ContestPhase(record["phase"])
     return contest
 
 
@@ -111,7 +111,7 @@ class CodeforcesDaemon:
         self.database.create_table(
             "contests",
             ["`contest_id` INT PRIMARY KEY NOT NULL",
-             "`contest_name` VARCHAR(100) NULL",
+             "`contest_name` VARCHAR(200) NULL",
              "`start_timestamp` BIGINT NOT NULL",
              "`phase` VARCHAR(100) NULL"])
         db_contests = self.database.data_from_table("contests",

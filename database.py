@@ -37,7 +37,7 @@ class Database:
             self.cursor.execute(query)
             self.connection.commit()
         except Error as err:
-            print(err)
+            print("Database", err)
 
     def delete_table(self, table_name):
         """Delete table"""
@@ -46,12 +46,13 @@ class Database:
             self.cursor.execute(query)
             self.connection.commit()
         except Error as err:
-            print(err)
+            print("Database", err)
 
     def table_names(self, full: bool = False):
         """
         Get table names from the database
 
+        :param bool full: show table type
         :return: all tables names from database
         """
         try:
@@ -61,7 +62,7 @@ class Database:
                 self.cursor.execute("SHOW TABLES")
             return self.cursor.fetchall()
         except Error as err:
-            print(err)
+            print("Database", err)
             return list()
 
     def table_info(self, table_name):
@@ -75,7 +76,7 @@ class Database:
             self.cursor.execute("SHOW COLUMNS FROM {}".format(table_name))
             return self.cursor.fetchall()
         except Error as err:
-            print(err)
+            print("Database", err)
             return list()
 
     def table_struct(self, table_name):
@@ -89,23 +90,22 @@ class Database:
             self.cursor.execute("SHOW CREATE TABLE {}".format(table_name))
             return self.cursor.fetchall()
         except Error as err:
-            print(err)
+            print("Database", err)
             return list()
 
-    def rename_table(self, table_name, new_name):
+    def rename_table(self, cur_name, new_name):
         """
         Rename table
-        :param string table_name: current table name
+        :param string cur_name: current table name
         :param string new_name: new table name
         """
-
-        query = "RENAME TABLE {} to {}".format(table_name, new_name)
+        query = "RENAME TABLE {} to {}".format(cur_name, new_name)
 
         try:
             self.cursor.execute(query)
             self.connection.commit()
         except Error as err:
-            print(err)
+            print("Database", err)
 
     def add_column(self, table_name, column_name):
         """
@@ -114,26 +114,27 @@ class Database:
         :param string column_name: column name
         """
         query = "ALTER TABLE {} ADD {}".format(table_name, column_name)
+
         try:
             self.cursor.execute(query)
             self.connection.commit()
         except Error as err:
-            print(err)
+            print("Database", err)
 
-    def change_column(self, table_name, old_column, new_column):
+    def change_column(self, table_name, old_column_name, new_column):
         """
         Add column to the table
         :param string table_name: table name
-        :param string old_column: current column name
-        :param string new_column: new column name
+        :param string old_column_name: current column name
+        :param string new_column: new column characteristics
         """
-        query = "ALTER TABLE {} CHANGE COLUMN {} {}".format(table_name, old_column, new_column)
+        query = "ALTER TABLE {} CHANGE COLUMN {} {}".format(table_name, old_column_name, new_column)
 
         try:
             self.cursor.execute(query)
             self.connection.commit()
         except Error as err:
-            print(err)
+            print("Database", err)
 
     def delete_column(self, table_name, column_name):
         """
@@ -142,11 +143,12 @@ class Database:
         :param string column_name: column name
         """
         query = "ALTER TABLE {} DROP COLUMN {}".format(table_name, column_name)
+
         try:
             self.cursor.execute(query)
             self.connection.commit()
         except Error as err:
-            print(err)
+            print("Database", err)
 
     def insert_into_table(self, table_name, entry_data):
         """
@@ -162,6 +164,8 @@ class Database:
                 block_column += column['Field'] + ", "
             entry_data_str = []
             for data in entry_data:
+                if data is None:
+                    data = "NULL"
                 if isinstance(data, str):
                     entry_data_str.append("'{}'".format(data))
                 else:
@@ -172,7 +176,7 @@ class Database:
             self.cursor.execute(query)
             self.connection.commit()
         except Error as err:
-            print(err)
+            print("Database", err)
 
     def remove_from_table(self, table_name, data):
         """
@@ -189,7 +193,7 @@ class Database:
             self.cursor.execute(query)
             self.connection.commit()
         except Error as err:
-            print(err)
+            print("Database", err)
 
     def update_record(self, table_name, key_condition, new_value):
         """
@@ -207,7 +211,7 @@ class Database:
             self.cursor.execute(query)
             self.connection.commit()
         except Error as err:
-            print(err)
+            print("Database", err)
 
     def data_from_table(self, table_name, extra_parameter: dict = None):
         """
@@ -253,7 +257,7 @@ class Database:
             self.cursor.execute(query)
             return self.cursor.fetchall()
         except Error as err:
-            print(err)
+            print("Database", err)
             return dict()
 
     def query(self, sql):
@@ -266,7 +270,7 @@ class Database:
             self.cursor.execute(sql)
             return self.cursor.fetchall()
         except Error as err:
-            print(err)
+            print("Database", err)
             return list()
 
 
@@ -307,9 +311,11 @@ class Datatype(Enum):
     """
         Enum allowable value types
         BOOL - bool
+        TEXT_100 - str, text up to 100 characters
+        TEXT_200 - str, text up to 200 characters
         TEXT - str,  text up to 16 MB long
         INT  - int,  integers from -2 * 10^9 to 2 * 10^9
-        UINT - unsigned int, integers from 0 to 4 * 10^9
+        U_INT - unsigned int, integers from 0 to 4 * 10^9
         BIGINT - int,  integers from -9 * 10^18 to 9 * 10^18
         FLOAT - float, fractional numbers from -3.4028 * 10^38 to 3.4028 * 10^38
         DATE - dates from January 1, 1000 to December 31, 9999, format: "yyyy-mm-dd"
@@ -321,6 +327,7 @@ class Datatype(Enum):
     """
     BOOL = "BOOL"
     TEXT_100 = "VARCHAR(100)"
+    TEXT_200 = "VARCHAR(200)"
     TEXT = "MEDIUMTEXT"
     INT = "INT"
     U_INT = "INT UNSIGNED"
@@ -343,9 +350,9 @@ class Column:
                  not_null: bool = True):
         """
         Initializing the column object
-        :param name:
-        :param primary_key:
-        :param not_null:
+        :param str name: column name
+        :param bool primary_key: if column is primary key
+        :param bool not_null: False if in column could be NULL
         """
         self.name = name
         self.datatype = datatype
@@ -357,7 +364,6 @@ class Column:
         converts the structure to a list
         :return list[str]: [attribute, primary_key (optional)]
         """
-
         if self.primary_key:
             self.not_null = True
         not_null_str = "NOT NULL"
@@ -369,3 +375,20 @@ class Column:
         if self.primary_key:
             return [attribute, primary_key]
         return [attribute]
+
+    def to_str(self):
+        """
+        converts the structure to str
+        :return str: "`table_name` COLUMN_TYPE PRIMARY KEY"
+        """
+        if self.primary_key:
+            self.not_null = True
+        not_null_str = "NOT NULL"
+        if not self.not_null:
+            not_null_str = "NULL"
+        attribute = "`{}` {} {}".format(self.name, self.datatype.value, not_null_str)
+        primary_key = "PRIMARY KEY (`{}`)".format(self.name)
+
+        if self.primary_key:
+            return attribute + primary_key
+        return attribute
