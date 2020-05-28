@@ -91,7 +91,8 @@ def notify_about_contest(message):
     params["attributes"].append("cf_handle")
     params["conditions"].append("chat_id = {}".format(message.chat.id))
     cf_handle = BOT.database.data_from_table("users", params)
-    if cf_handle and cf_handle[0][0] is not None:
+    if cf_handle and cf_handle[0]["cf_handle"] is not None:
+
         BOT.database.insert_into_table("cf_notifications",
                                        [cf_handle[0][0], True])
 
