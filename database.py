@@ -125,7 +125,7 @@ class Database:
 
     def change_column(self, table_name, old_column_name, new_column):
         """
-        Add column to the table
+        Change column in the table
         :param string table_name: table name
         :param string old_column_name: current column name
         :param string new_column: new column characteristics
