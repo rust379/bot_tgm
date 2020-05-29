@@ -123,7 +123,7 @@ class Database:
 
     def change_column(self, table_name, old_column_name, new_column):
         """
-        Add column to the table
+        Change column in the table
         :param string table_name: table name
         :param string old_column_name: current column name
         :param string new_column: new column characteristics
@@ -160,7 +160,8 @@ class Database:
             columns = self.table_info(table_name)
             block_column = ""
             for column in columns:
-                block_column += column['Field'] + ", "
+                block_column += column["Field"] + ", "
+
 
             entry_data_str = []
             for data in entry_data:
