@@ -69,7 +69,6 @@ class CodeforcesDaemon:
         self.api = cf.CodeforcesAPI()
         self.timestamp2contests = {}
         self.contests = set()
-
         self.database = database
         self.load_contests_from_database()
 
@@ -77,7 +76,7 @@ class CodeforcesDaemon:
         """Send message with message_text to each of cf_handles
 
         Args:
-            cf_handles: list of tuples with codeforces handle. Ex. [(strizh78,), (rust,)]
+            cf_handles: list of dicts with codeforces handle. Ex. [{'cf_handle' : strizh78,}, ...]
             message_text: text for sending
         """
         params = db.get_request_struct()
@@ -85,7 +84,7 @@ class CodeforcesDaemon:
         for cf_handle in cf_handles:
             params["conditions"] = ['cf_handle = "{}"'.format(cf_handle[0])]
             chat_id = self.database.data_from_table("users", params)[0]
-            sender.send_message(chat_id[0], message_text)
+            sender.send_message(chat_id["chat_id"], message_text)
 
     def __create_contest_message(self, contests):
         """Form message text about contests and send it,
@@ -117,7 +116,7 @@ class CodeforcesDaemon:
         db_contests = self.database.data_from_table("contests",
                                                     db.get_request_struct())
         for db_contest in db_contests:
-            if db_contest[2] > int(datetime.datetime.now().timestamp()):
+            if db_contest["start_timestamp"] > int(datetime.datetime.now().timestamp()):
                 contest = contest_from_database_record(db_contest)
                 one_hour = 3600
                 add_to_dict(self.timestamp2contests,

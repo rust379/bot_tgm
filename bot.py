@@ -49,16 +49,13 @@ def welcome(message):
                     "созданный чтобы быть подопытным кроликом.").format(
                         message.from_user, BOT.get_me())
     chat_id = message.chat.id
-    BOT.send_message(message.chat.id, message_text, parse_mode="html")
+    BOT.send_message(chat_id, message_text, parse_mode="html")
     params = db.get_request_struct()
     params["conditions"] = ["chat_id = {}".format(chat_id)]
     if BOT.database.data_from_table("users", params):
         return
-    tgm_username = message.from_user.username
-    if tgm_username is None:
-        tgm_username = "NULL"
     BOT.database.insert_into_table(
-        "users", [chat_id, tgm_username, "NULL"])
+        "users", [chat_id, message.from_user.username, "NULL"])
 
 
 @BOT.message_handler(commands=["help"])
@@ -90,10 +87,10 @@ def notify_about_contest(message):
     params = db.get_request_struct()
     params["attributes"].append("cf_handle")
     params["conditions"].append("chat_id = {}".format(message.chat.id))
-    cf_handle = BOT.database.data_from_table("users", params)
-    if cf_handle and cf_handle[0][0] is not None:
+    cf_handle = BOT.database.data_from_table("users", params)[0]["cf_handle"]
+    if cf_handle is not None:
         BOT.database.insert_into_table("cf_notifications",
-                                       [cf_handle[0][0], True])
+                                       [cf_handle["cf_handle"], True])
 
 
 @BOT.message_handler(commands=["myRating"])
@@ -103,9 +100,9 @@ def cur_user_rating(message):
     params = db.get_request_struct()
     params["attributes"].append("cf_handle")
     params["conditions"].append("chat_id = {}".format(message.chat.id))
-    cf_handle = BOT.database.data_from_table("users", params)
-    if cf_handle:
-        message_text = cf.curUserRating(cf_handle[0][0])
+    cf_handle = BOT.database.data_from_table("users", params)[0]["cf_handle"]
+    if cf_handle is not None:
+        message_text = cf.curUserRating(cf_handle)
         BOT.send_message(message.chat.id, message_text, parse_mode="html")
 
 

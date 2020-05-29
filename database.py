@@ -1,5 +1,5 @@
 """
-Interaction with mysql database
+Interaction with MySQL database
 
 """
 
@@ -101,9 +101,8 @@ class Database:
         :param string cur_name: current table name
         :param string new_name: new table name
         """
-        query = "RENAME TABLE {} to {}".format(cur_name, new_name)
-
         try:
+            query = "RENAME TABLE {} to {}".format(cur_name, new_name)
             self.cursor.execute(query)
             self.connection.commit()
         except Error as err:
@@ -115,9 +114,8 @@ class Database:
         :param string table_name: table name
         :param string column_name: column name
         """
-        query = "ALTER TABLE {} ADD {}".format(table_name, column_name)
-
         try:
+            query = "ALTER TABLE {} ADD {}".format(table_name, column_name)
             self.cursor.execute(query)
             self.connection.commit()
         except Error as err:
@@ -130,9 +128,8 @@ class Database:
         :param string old_column_name: current column name
         :param string new_column: new column characteristics
         """
-        query = "ALTER TABLE {} CHANGE COLUMN {} {}".format(table_name, old_column_name, new_column)
-
         try:
+            query = "ALTER TABLE {} CHANGE COLUMN {} {}".format(table_name, old_column_name, new_column)
             self.cursor.execute(query)
             self.connection.commit()
         except Error as err:
@@ -145,9 +142,8 @@ class Database:
         :param string table_name: table name
         :param string column_name: column name
         """
-        query = "ALTER TABLE {} DROP COLUMN {}".format(table_name, column_name)
-
         try:
+            query = "ALTER TABLE {} DROP COLUMN {}".format(table_name, column_name)
             self.cursor.execute(query)
             self.connection.commit()
         except Error as err:
@@ -191,11 +187,9 @@ class Database:
         :param string table_name: table name
         :param list[string] data: record key, ex. 'user = "tourist"'
         """
-        cond_block = query_block(data)
-
-        query = "DELETE FROM {} WHERE {}".format(table_name, cond_block)
-
         try:
+            cond_block = query_block(data)
+            query = "DELETE FROM {} WHERE {}".format(table_name, cond_block)
             self.cursor.execute(query)
             self.connection.commit()
         except Error as err:
@@ -209,11 +203,9 @@ class Database:
             ex. ("user = 'Rust'", "cf_handle != 'tourist'")
         :param string new_value: New value of a cell, ex. "user_age = 146"
         """
-        block_condition = query_block(key_condition, " AND")
-
-        query = "UPDATE {} \nSET {} \nWHERE {}".format(table_name, new_value, block_condition)
-
         try:
+            block_condition = query_block(key_condition, " AND")
+            query = "UPDATE {} \nSET {} \nWHERE {}".format(table_name, new_value, block_condition)
             self.cursor.execute(query)
             self.connection.commit()
         except Error as err:
