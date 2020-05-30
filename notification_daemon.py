@@ -7,10 +7,12 @@ import database as db
 import sender
 import notifications as notif
 
-class NotificationDaemon():
+
+class NotificationDaemon:
     """
     Class for online monitoring users notifications
     """
+
     def __init__(self, database):
         """
         Initialize class
@@ -19,30 +21,33 @@ class NotificationDaemon():
         """
         self.database = database
         self.notifications = set()
-        self.last_update = time.ctime(0)
-        self.next_update = time.time()
+        self.last_update = 0
         self.update_notification_set()
-        self.database.create_table("user_notification_id", ["chat_id", "notif_id"])
+        self.database.create_table("user_notification_id",
+                                   ["`chat_id` INT UNSIGNED PRIMARY KEY NOT NULL",
+                                    "`notification_id` INT UNSIGNED NOT NULL"])
 
     def update_notification_set(self):
         """
         Loads notifications from the database and puts them in the class structure
         """
-        now = time.time()
-        self.last_update = now
+        now = int(time.time())
+        print(now)
+
         params = db.get_request_struct()
         params["conditions"] = ("is_active = True",
                                 "next_notification_date > {}".format(self.last_update),
                                 "next_notification_date <= {}".format(now))
         notification_list = self.database.data_from_table("user_notifications", params)
-
+        self.last_update = now
+        self.notifications.clear()
         for cur_notification in notification_list:
-            self.notifications.add(notif.Notification(cur_notification[0],
-                                                      cur_notification[1],
-                                                      cur_notification[2],
-                                                      cur_notification[3],
-                                                      cur_notification[4],
-                                                      cur_notification[5]))
+            self.notifications.add(notif.Notification(cur_notification["chat_id"],
+                                                      cur_notification["notification_id"],
+                                                      cur_notification["title"],
+                                                      cur_notification["next_notification_date"],
+                                                      notif.by_value(cur_notification["period"]),
+                                                      cur_notification["is_active"]))
 
     def run(self):
         """
@@ -51,9 +56,10 @@ class NotificationDaemon():
         """
         while True:
             self.update_notification_set()
+            print(len(self.notifications))
             for cur_notif in self.notifications:
                 sender.send_message(cur_notif.chat_id, cur_notif.title)
-                if cur_notif.period == notif.NotificationPeriod.no_period:
+                if cur_notif.period == notif.NotificationPeriod.NO_PERIOD:
                     self.database.remove_from_table("user_notifications",
                                                     cur_notif.data_key())
                 else:
@@ -62,3 +68,4 @@ class NotificationDaemon():
                     self.database.update_record("user_notifications",
                                                 cur_notif.data_key(),
                                                 new_value)
+            time.sleep(60)

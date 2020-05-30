@@ -5,6 +5,8 @@ import telebot
 import botToken
 import database as db
 import cfCommands as cf
+import notifications as notif
+import general_functions as gen_fun
 
 
 class BotRun(telebot.TeleBot):
@@ -18,6 +20,7 @@ class BotRun(telebot.TeleBot):
             token: string with telegram bot token
         """
         self.current_event = dict()
+        self.current_data = dict()
 
         super().__init__(token)
 
@@ -31,7 +34,6 @@ class BotRun(telebot.TeleBot):
 
     def run(self):
         """Execute bot with none_stop=True"""
-
         self.polling(none_stop=True)
 
 
@@ -43,11 +45,10 @@ def welcome(message):
     """Send welcome text to chat id, which specified in message param
     Create record in users table
     """
-
     message_text = ("Добро пожаловать, {0.first_name}!\n"
                     "Я - <b>{1.first_name}</b>, бот, "
                     "созданный чтобы быть подопытным кроликом.").format(
-                        message.from_user, BOT.get_me())
+        message.from_user, BOT.get_me())
     BOT.send_message(message.chat.id, message_text, parse_mode="html")
 
     BOT.database.insert_into_table(
@@ -102,6 +103,16 @@ def cur_user_rating(message):
         BOT.send_message(message.chat.id, message_text, parse_mode="html")
 
 
+@BOT.message_handler(commands=["newNotif"])
+def new_notification(message):
+    """Creating a new notification"""
+    message_text = "Пожалуйста, введите описание уведомления"
+    chat_id = message.chat.id
+    BOT.send_message(chat_id, message_text)
+    BOT.current_event[str(chat_id)] = "NOTIF_GET_TITLE"
+    BOT.current_data[str(chat_id)] = notif.Notification()
+
+
 @BOT.message_handler(content_types=["text"])
 def text_message_handler(message):
     """Analyze user"s current event and performs an action based on it
@@ -109,13 +120,36 @@ def text_message_handler(message):
     Possible values for event:
         "CF_REGISTRATION" - register user codeforces login in database
     If nothing event provided - ignore message"""
-
-    if str(message.chat.id) not in BOT.current_event.keys():
+    chat_id = message.chat.id
+    if str(chat_id) not in BOT.current_event.keys():
+        print(message)
         return
 
-    if BOT.current_event[str(message.chat.id)] == "CF_REGISTRATION":
-        BOT.database.update_record("users", [
-            'tgm_name = "{}" AND chat_id = {}'.format(
-                message.from_user.username, message.chat.id)
-        ], 'cf_handle = "{}"'.format(message.text))
-        BOT.current_event.pop(message.chat.id, None)
+    if BOT.current_event[str(chat_id)] == "CF_REGISTRATION":
+        BOT.database.update_record("users",
+                                   ['chat_id = {}'.format(chat_id)],
+                                   'cf_handle = "{}"'.format(message.text))
+        BOT.current_event.pop(chat_id, None)
+    elif BOT.current_event[str(chat_id)] == "NOTIF_GET_TITLE":
+        BOT.current_data[str(chat_id)].title = message.text
+        BOT.current_event[str(chat_id)] = "NOTIF_GET_TIME"
+        message_text = "Введите дату и время в формате ДД.ММ.ГГ (или ДД.ММ) и/или ЧЧ:ММ"
+        BOT.send_message(chat_id, message_text)
+    elif BOT.current_event[str(chat_id)] == "NOTIF_GET_TIME":
+        date = message.text
+        correct, message_text = gen_fun.check_date_correct(date)
+        if correct:
+            ts = gen_fun.timestamp(date)
+            if ts == -1:
+                message_text = "Это время уже прошло"
+            else:
+                user_notif = BOT.current_data[str(chat_id)]
+                user_notif.next_notification_date = ts
+                user_notif.notification_id = notif.next_notification_id(BOT.database, chat_id)
+                user_notif.chat_id = chat_id
+                message_text = "Уведомление записано"
+                BOT.current_event[str(chat_id)] = None
+                BOT.database.insert_into_table("user_notifications",
+                                               user_notif.to_list())
+                print(user_notif.to_list())
+        BOT.send_message(chat_id, message_text)
