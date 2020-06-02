@@ -126,7 +126,6 @@ def text_message_handler(message):
     If nothing event provided - ignore message"""
     chat_id = message.chat.id
     if str(chat_id) not in BOT.current_event.keys():
-        print(message)
         return
 
     if BOT.current_event[str(chat_id)] == "CF_REGISTRATION":
@@ -155,5 +154,4 @@ def text_message_handler(message):
                 BOT.current_event[str(chat_id)] = None
                 BOT.database.insert_into_table("user_notifications",
                                                user_notif.to_list())
-                print(user_notif.to_list())
         BOT.send_message(chat_id, message_text)
