@@ -32,7 +32,6 @@ class NotificationDaemon:
         Loads notifications from the database and puts them in the class structure
         """
         now = int(time.time())
-        print(now)
 
         params = db.get_request_struct()
         params["conditions"] = ("is_active = True",
@@ -56,7 +55,6 @@ class NotificationDaemon:
         """
         while True:
             self.update_notification_set()
-            print(len(self.notifications))
             for cur_notif in self.notifications:
                 sender.send_message(cur_notif.chat_id, cur_notif.title)
                 if cur_notif.period == notif.NotificationPeriod.NO_PERIOD:
