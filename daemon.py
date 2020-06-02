@@ -33,7 +33,8 @@ CF_THREAD = threading.Thread(target=CF_DAEMON.run, daemon=True)
 NOTIF_DAEMON = notification_daemon.NotificationDaemon(DATABASE)
 NOTIF_THREAD = threading.Thread(target=NOTIF_DAEMON.run, daemon=True)
 
-#CF_THREAD.start()
+CF_THREAD.start()
 NOTIF_THREAD.start()
+
 BOT_THREAD.start()
 BOT_THREAD.join()
