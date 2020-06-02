@@ -9,6 +9,7 @@ import re
 def check_date_correct(date):
     """
     Check date for correctness
+    Correct formats: 'dd.mm'(+'.yy') (+'hh.mm') or 'hh.mm'
     :param str date: Checking date
     :return bool: True if date is correct
             str: text of error
