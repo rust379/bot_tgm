@@ -6,7 +6,7 @@ import botToken
 import database as db
 import cfCommands as cf
 import notifications as notif
-import general_functions as gen_fun
+import general_functions
 
 
 class BotRun(telebot.TeleBot):
@@ -20,7 +20,6 @@ class BotRun(telebot.TeleBot):
             token: string with telegram bot token
         """
         self.current_event = dict()
-        self.current_data = dict()
 
         super().__init__(token)
 
@@ -34,6 +33,7 @@ class BotRun(telebot.TeleBot):
 
     def run(self):
         """Execute bot with none_stop=True"""
+
         self.polling(none_stop=True)
 
 
@@ -45,12 +45,17 @@ def welcome(message):
     """Send welcome text to chat id, which specified in message param
     Create record in users table
     """
+
     message_text = ("Добро пожаловать, {0.first_name}!\n"
                     "Я - <b>{1.first_name}</b>, бот, "
                     "созданный чтобы быть подопытным кроликом.").format(
-        message.from_user, BOT.get_me())
-    BOT.send_message(message.chat.id, message_text, parse_mode="html")
-
+                        message.from_user, BOT.get_me())
+    chat_id = message.chat.id
+    BOT.send_message(chat_id, message_text, parse_mode="html")
+    params = db.get_request_struct()
+    params["conditions"] = ["chat_id = {}".format(chat_id)]
+    if BOT.database.data_from_table("users", params):
+        return
     BOT.database.insert_into_table(
         "users", [message.from_user.username, None, message.chat.id])
 
@@ -116,7 +121,6 @@ def new_notification(message):
 @BOT.message_handler(content_types=["text"])
 def text_message_handler(message):
     """Analyze user"s current event and performs an action based on it
-
     Possible values for event:
         "CF_REGISTRATION" - register user codeforces login in database
     If nothing event provided - ignore message"""
@@ -137,9 +141,9 @@ def text_message_handler(message):
         BOT.send_message(chat_id, message_text)
     elif BOT.current_event[str(chat_id)] == "NOTIF_GET_TIME":
         date = message.text
-        correct, message_text = gen_fun.check_date_correct(date)
+        correct, message_text = general_functions.check_date_correct(date)
         if correct:
-            ts = gen_fun.timestamp(date)
+            ts = general_functions.timestamp(date)
             if ts == -1:
                 message_text = "Это время уже прошло"
             else:
