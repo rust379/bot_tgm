@@ -59,7 +59,7 @@ def welcome(message):
     if BOT.database.data_from_table("users", params):
         return
     BOT.database.insert_into_table(
-        "users", [message.from_user.username, None, message.chat.id])
+        "users", [chat_id, message.from_user.username, "NULL"])
 
 
 @BOT.message_handler(commands=["help"])
@@ -92,9 +92,9 @@ def notify_about_contest(message):
     params["attributes"].append("cf_handle")
     params["conditions"].append("chat_id = {}".format(message.chat.id))
     cf_handle = BOT.database.data_from_table("users", params)
-    if cf_handle and cf_handle[0][0] is not None:
+    if cf_handle is not None:
         BOT.database.insert_into_table("cf_notifications",
-                                       [cf_handle[0][0], "true"])
+                                       [cf_handle["cf_handle"], True])
 
 
 @BOT.message_handler(commands=["myRating"])
@@ -104,9 +104,9 @@ def cur_user_rating(message):
     params = db.get_request_struct()
     params["attributes"].append("cf_handle")
     params["conditions"].append("chat_id = {}".format(message.chat.id))
-    cf_handle = BOT.database.data_from_table("users", params)
-    if cf_handle:
-        message_text = cf.curUserRating(cf_handle[0][0])
+    cf_handle = BOT.database.data_from_table("users", params)[0]["cf_handle"]
+    if cf_handle is not None:
+        message_text = cf.curUserRating(cf_handle)
         BOT.send_message(message.chat.id, message_text, parse_mode="html")
 
 
@@ -132,9 +132,10 @@ def text_message_handler(message):
         return
 
     if BOT.current_event[str(chat_id)] == "CF_REGISTRATION":
-        BOT.database.update_record("users",
-                                   ['chat_id = {}'.format(chat_id)],
-                                   'cf_handle = "{}"'.format(message.text))
+        BOT.database.update_record("users", [
+            'tgm_name = "{}" AND chat_id = {}'.format(
+                message.from_user.username, chat_id)
+        ], 'cf_handle = "{}"'.format(message.text))
         BOT.current_event.pop(chat_id, None)
     elif BOT.current_event[str(chat_id)] == "NOTIF_GET_TITLE":
         BOT.current_data[str(chat_id)].title = message.text
