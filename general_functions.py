@@ -39,7 +39,7 @@ def check_date_correct(date):
         days_in_month[1] = 29
     if month and day > days_in_month[month - 1]:
         return False, "Некорректный день"
-    return True, "Все ок"
+    return True, "Корректная дата"
 
 
 def timestamp(date):
