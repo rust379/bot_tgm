@@ -1,6 +1,7 @@
 """
 Create telegram bot and define message_handlers for it
 """
+import time
 import telebot
 import botToken
 import database as db
@@ -19,6 +20,7 @@ class BotRun(telebot.TeleBot):
         Args:
             token: string with telegram bot token
         """
+        self.current_data = dict()
         self.current_event = dict()
 
         super().__init__(token)
@@ -116,6 +118,7 @@ def new_notification(message):
     BOT.send_message(chat_id, message_text)
     BOT.current_event[str(chat_id)] = "NOTIF_GET_TITLE"
     BOT.current_data[str(chat_id)] = notif.Notification()
+    BOT.current_data[str(chat_id)].chat_id = chat_id
 
 
 @BOT.message_handler(content_types=["text"])
@@ -142,16 +145,12 @@ def text_message_handler(message):
         date = message.text
         correct, message_text = general_functions.check_date_correct(date)
         if correct:
-            ts = general_functions.timestamp(date)
-            if ts == -1:
+            timestamp = general_functions.timestamp(date)
+            if timestamp < time.time():
                 message_text = "Это время уже прошло"
             else:
-                user_notif = BOT.current_data[str(chat_id)]
-                user_notif.next_notification_date = ts
-                user_notif.notification_id = notif.next_notification_id(BOT.database, chat_id)
-                user_notif.chat_id = chat_id
                 message_text = "Уведомление записано"
                 BOT.current_event[str(chat_id)] = None
-                BOT.database.insert_into_table("user_notifications",
-                                               user_notif.to_list())
+                BOT.current_data[str(chat_id)].next_notification_date = timestamp
+                BOT.current_data[str(chat_id)].record_notif(BOT.database)
         BOT.send_message(chat_id, message_text)
