@@ -14,22 +14,6 @@ class NotificationPeriod(Enum):
     TWO_WEEKS = 14 * 24 * 60 * 60
 
 
-def by_value(value):
-    """
-    Get notification period by value
-    :param int value: period value
-    :return NotificationPeriod: Notification period
-    """
-    if value == 0:
-        return NotificationPeriod.NO_PERIOD
-    if value == 24 * 60 * 60:
-        return NotificationPeriod.DAY
-    if value == 7 * 24 * 60 * 60:
-        return NotificationPeriod.WEEK
-    if value == 14 * 24 * 60 * 60:
-        return NotificationPeriod.TWO_WEEKS
-
-
 class Notification:
     """
     Class notification,
@@ -82,6 +66,16 @@ class Notification:
                              "notification_id = {}".format(self.notification_id)]
         return notification_list
 
+    def record_notif(self, database):
+        """
+        Record new notification to database
+        :param database.Database database: database
+        :return:
+        """
+        if not self.notification_id:
+            self.notification_id = next_notification_id(database, self.chat_id)
+        database.insert_into_table("user_notifications", self.to_list())
+
 
 def next_notification_id(database, chat_id):
     """
@@ -107,54 +101,3 @@ def next_notification_id(database, chat_id):
                                ["chat_id = {}".format(chat_id)],
                                "notification_id = {}".format(next_id))
     return next_id
-
-
-def activate_notification(database, chat_id, notification_id):
-    """
-    Activate user notification
-    :param database.Database database: database
-    :param integer chat_id: user chat id
-    :param integer notification_id: notification id
-    """
-    key = ["chat_id = {}".format(chat_id),
-           "notification_id = {}".format(notification_id)]
-    new_value = "is_active = True"
-    database.update_record("user_notifications", key, new_value)
-
-
-def deactivate_notification(database, chat_id, notification_id):
-    """
-    Deactivate user notification
-    :param database.Database database: database
-    :param integer chat_id: user chat id
-    :param integer notification_id: notification id
-    """
-    key = ["chat_id = {}".format(chat_id),
-           "notification_id = {}".format(notification_id)]
-    new_value = "is_active = False"
-    database.update_record("user_notifications", key, new_value)
-
-
-def delete_notification(database, chat_id, notif_id):
-    """
-    Delete user notification from database
-    :param database.Database database: database
-    :param integer chat_id: chat id
-    :param integer notif_id: notification id
-    """
-    key = ["chat_id = {}".format(chat_id),
-           "notification_id = {}".format(notif_id)]
-    database.remove_from_table("user_notifications", key)
-
-
-def update_notification(database, chat_id, notif_id, new_val):
-    """
-    Update user notification
-    :param database.Database database: database
-    :param integer chat_id: chat id
-    :param integer notif_id: notification id
-    :param string new_val: ex. 'title = "new title"'
-    """
-    key = ["chat_id = {}".format(chat_id),
-           "notification_id = {}".format(notif_id)]
-    database.update_record("user_notifications", key, new_val)
