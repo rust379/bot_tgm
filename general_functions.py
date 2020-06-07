@@ -51,12 +51,10 @@ def timestamp(date):
     time_str = str(datetime.now())[0:16]
     if date[-3] != ':':
         date += " 00:00"
-    year = False
     day = False
     if date[2] == '.':
         if date[5] == '.':
             date = date[0:6] + time_str[0:2] + date[6:]
-            year = True
         else:
             date = date[0:5] + '.' + time_str[0:4] + date[5:]
         day = True
@@ -67,8 +65,6 @@ def timestamp(date):
     if date[-5:] < time_str[-5:16] and not day:
         time_int += 60 * 60 * 24
     if time_int < time.time():
-        if year:
-            return -1
         date = date[0:6] + str(int(date[6:10]) + 1) + date[10:]
         time_int = time.mktime(datetime.strptime(date, "%d.%m.%Y %H:%M").timetuple())
     return time_int
