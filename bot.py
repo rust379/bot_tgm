@@ -1,10 +1,13 @@
 """
 Create telegram bot and define message_handlers for it
 """
+import time
 import telebot
 import botToken
 import database as db
 import cfCommands as cf
+import notifications as notif
+import general_functions
 
 
 class BotRun(telebot.TeleBot):
@@ -17,6 +20,7 @@ class BotRun(telebot.TeleBot):
         Args:
             token: string with telegram bot token
         """
+        self.current_data = dict()
         self.current_event = dict()
 
         super().__init__(token)
@@ -87,7 +91,7 @@ def notify_about_contest(message):
     params = db.get_request_struct()
     params["attributes"].append("cf_handle")
     params["conditions"].append("chat_id = {}".format(message.chat.id))
-    cf_handle = BOT.database.data_from_table("users", params)[0]["cf_handle"]
+    cf_handle = BOT.database.data_from_table("users", params)
     if cf_handle is not None:
         BOT.database.insert_into_table("cf_notifications",
                                        [cf_handle["cf_handle"], True])
@@ -106,20 +110,48 @@ def cur_user_rating(message):
         BOT.send_message(message.chat.id, message_text, parse_mode="html")
 
 
+@BOT.message_handler(commands=["newNotif"])
+def new_notification(message):
+    """Creating a new notification"""
+    message_text = "Пожалуйста, введите описание уведомления"
+    chat_id = message.chat.id
+    BOT.send_message(chat_id, message_text)
+    BOT.current_event[str(chat_id)] = "NOTIF_GET_TITLE"
+    BOT.current_data[str(chat_id)] = notif.Notification()
+    BOT.current_data[str(chat_id)].chat_id = chat_id
+
+
 @BOT.message_handler(content_types=["text"])
 def text_message_handler(message):
     """Analyze user"s current event and performs an action based on it
-
     Possible values for event:
         "CF_REGISTRATION" - register user codeforces login in database
     If nothing event provided - ignore message"""
-
-    if str(message.chat.id) not in BOT.current_event.keys():
+    chat_id = message.chat.id
+    if str(chat_id) not in BOT.current_event.keys():
         return
 
-    if BOT.current_event[str(message.chat.id)] == "CF_REGISTRATION":
+    if BOT.current_event[str(chat_id)] == "CF_REGISTRATION":
         BOT.database.update_record("users", [
             'tgm_name = "{}" AND chat_id = {}'.format(
-                message.from_user.username, message.chat.id)
+                message.from_user.username, chat_id)
         ], 'cf_handle = "{}"'.format(message.text))
-        BOT.current_event.pop(message.chat.id, None)
+        BOT.current_event.pop(chat_id, None)
+    elif BOT.current_event[str(chat_id)] == "NOTIF_GET_TITLE":
+        BOT.current_data[str(chat_id)].title = message.text
+        BOT.current_event[str(chat_id)] = "NOTIF_GET_TIME"
+        message_text = "Введите дату и время в формате ДД.ММ.ГГ (или ДД.ММ) и/или ЧЧ:ММ"
+        BOT.send_message(chat_id, message_text)
+    elif BOT.current_event[str(chat_id)] == "NOTIF_GET_TIME":
+        date = message.text
+        correct, message_text = general_functions.check_date_correct(date)
+        if correct:
+            timestamp = general_functions.timestamp(date)
+            if timestamp < time.time():
+                message_text = "Это время уже прошло"
+            else:
+                message_text = "Уведомление записано"
+                BOT.current_event[str(chat_id)] = None
+                BOT.current_data[str(chat_id)].next_notification_date = timestamp
+                BOT.current_data[str(chat_id)].record_notif(BOT.database)
+        BOT.send_message(chat_id, message_text)
